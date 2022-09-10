@@ -1,6 +1,7 @@
 # 基于 C/C++ 语言的编程设计
 ## 目前进度
-项目未确定 (︶︹︺)
+- 项目未确定 (︶︹︺)
+- 决定先用 [`Dear ImGui`](https://github.com/ocornut/imgui) 写点益智小游戏试试手. 游戏关卡以 `yaml` 格式保存并利用 [`yaml-cpp`](https://github.com/jbeder/yaml-cpp) 库进行解析.
 
 ## 初始化
 将项目克隆到本地:
