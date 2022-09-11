@@ -20,9 +20,6 @@
     <ClInclude Include="main.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="sudoku.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\deps\imgui\imconfig.h">
       <Filter>ImGui</Filter>
     </ClInclude>
@@ -49,9 +46,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="control.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -81,6 +75,9 @@
     </ClCompile>
     <ClCompile Include="..\deps\imgui\imgui_widgets.cpp">
       <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="game.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

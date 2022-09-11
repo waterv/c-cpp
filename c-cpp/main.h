@@ -11,6 +11,7 @@
 #include "yaml-cpp/yaml.h"
 
 const int CellSize = 25;
+const int DifficultySize = 60;
 
 // Direct3D helpers
 bool CreateDeviceD3D(HWND hWnd);
@@ -35,11 +36,11 @@ void PopStyleButtonColored();
 void TimeText(int time);
 void TimeText(float time);
 void ErrorText(const char* fmt, ...);
-void Difficulty(int difficulty);
+bool Difficulty(int difficulty);
 bool BeginCenterPopupModal(const char title[], bool* p_open);
+}  // namespace ImGui
 
 float GetRealWidth(float width, int itemCount, bool hasPadding = false);
 float GetRealHeight(float height, int itemCount, bool hasPadding = false);
-}  // namespace ImGui
 
 #endif

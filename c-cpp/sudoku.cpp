@@ -1,7 +1,27 @@
-#include "sudoku.h"
+#include "game.h"
+
+class Sudoku {
+ public:
+  YAML::Node node;
+
+  int question[9][9];
+  int board[9][9];
+
+  float startTime;
+  float endTime;
+
+  bool err;
+  char errtype[7];
+  int erridx;
+
+  Sudoku(const char *filename);
+  Sudoku(Sudoku &sudoku);
+  void clear();
+  void check();
+};
 
 void Game::SudokuWindow(bool *p_open) {
-  static Sudoku sudoku{"../levels/sudoku/psv-001.yaml"};
+  static Sudoku sudoku{"../levels/sudoku/psv-1.yaml"};
 
   if (!ImGui::Begin("Sudoku", p_open,
                     ImGuiWindowFlags_NoResize |
@@ -19,49 +39,26 @@ void Game::SudokuWindow(bool *p_open) {
 
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("Game")) {
-      if (ImGui::MenuItem("Select Level..")) showSelectLevel = true;
+      showSelectLevel = ImGui::MenuItem("Select Level..");
       if (ImGui::MenuItem("Clear")) sudoku.clear();
       if (ImGui::MenuItem("Reset")) sudoku = Sudoku{sudoku};
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Help")) {
-      if (ImGui::MenuItem("Tutorial")) showTutorialWindow = true;
+      showTutorialWindow = ImGui::MenuItem("Tutorial");
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
   }
 
-  // Select Level
-  if (ImGui::BeginCenterPopupModal("Sudoku Level Select", NULL)) {
-    static char filename[128] = "psv-002";
-    static bool showSelectLevelError = false;
+  // Level Select
+  static std::string levelSelected;
+  if (showSelectLevel)
+    if (Game::LevelSelectWindow("sudoku", &showSelectLevel, &levelSelected))
+      sudoku = Sudoku{
+          (std::string("../levels/sudoku/") + levelSelected + ".yaml").c_str()};
 
-    ImGui::InputText("Filename", filename, IM_ARRAYSIZE(filename));
-
-    if (ImGui::Button("OK")) {
-      try {
-        sudoku = Sudoku{std::string("../levels/sudoku/")
-                            .append(filename)
-                            .append(".yaml")
-                            .c_str()};
-        showSelectLevel = false;
-        showSelectLevelError = false;
-        ImGui::CloseCurrentPopup();
-      } catch (std::runtime_error) {
-        showSelectLevelError = true;
-      }
-    }
-
-    if (showSelectLevelError) {
-      ImGui::SameLine();
-      ImGui::ErrorText("Open File Failed!");
-    }
-
-    ImGui::EndPopup();
-  }
-
-  if (showSelectLevel) ImGui::OpenPopup("Sudoku Level Select");
-  if (showTutorialWindow) SudokuTutorialWindow(&showTutorialWindow);
+  if (showTutorialWindow) Game::TutorialWindow("sudoku", &showTutorialWindow);
 
   // Select number by keyboard
   static int num = 1;
@@ -70,8 +67,8 @@ void Game::SudokuWindow(bool *p_open) {
 
   // Board
   ImGui::BeginChild("SudokuChildL",
-                    {ImGui::GetRealWidth(9 * CellSize, 9, true),
-                     ImGui::GetRealHeight(9 * CellSize, 9, true)},
+                    {GetRealWidth(9 * CellSize, 9, true),
+                     GetRealHeight(9 * CellSize, 9, true)},
                     true);
   for (int y = 0; y < 9; y++) {
     for (int x = 0; x < 9; x++) {
@@ -82,9 +79,10 @@ void Game::SudokuWindow(bool *p_open) {
 
       ImGui::PushID(x + y * 9);
       if (disabled) ImGui::PushStyleTextDisabled();
-      if (ImGui::Selectable(
-              sudoku.board[y][x] ? numStr[sudoku.board[y][x]] : "", selected, 0,
-              ImVec2(CellSize, CellSize)))
+      if (ImGui::Selectable(sudoku.board[y][x]
+                                ? std::to_string(sudoku.board[y][x]).c_str()
+                                : "",
+                            selected, 0, ImVec2(CellSize, CellSize)))
         if (!disabled && !sudoku.endTime) sudoku.board[y][x] = num;
       if (disabled) ImGui::PopStyleColor();
       ImGui::PopID();
@@ -95,10 +93,10 @@ void Game::SudokuWindow(bool *p_open) {
   ImGui::SameLine();
 
   // Numpad
-  ImGui::BeginChild("SudokuChildR",
-                    {ImGui::GetRealWidth(3 * 25, 3, true),
-                     ImGui::GetRealHeight(4 * CellSize, 4, true)},
-                    true);
+  ImGui::BeginChild(
+      "SudokuChildR",
+      {GetRealWidth(3 * 25, 3, true), GetRealHeight(4 * CellSize, 4, true)},
+      true);
   Game::NumPadWindow(&num);
   ImGui::EndChild();
 
@@ -124,31 +122,6 @@ void Game::SudokuWindow(bool *p_open) {
   ImGui::Text("Author: %s", sudoku.node["author"].as<std::string>().c_str());
 
   ImGui::PopStyleVar();
-  ImGui::End();
-}
-
-void SudokuTutorialWindow(bool *p_open) {
-  ImGui::Begin("Sudoku Tutorial", p_open,
-               ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-                   ImGuiWindowFlags_AlwaysAutoResize);
-  if (ImGui::BeginTabBar("SudokuTutorialTabbar", ImGuiTabBarFlags_None)) {
-    if (ImGui::BeginTabItem("Rule")) {
-      ImGui::BulletText("Place a number from 1 to 9 in each empty cell.");
-      ImGui::BulletText(
-          "Each row, column and 3x3 block contains all the numbers from 1 to "
-          "9.");
-      ImGui::Text("(c) Nikoli 1984");
-      ImGui::EndTabItem();
-    }
-    if (ImGui::BeginTabItem("Control")) {
-      ImGui::BulletText(
-          "To select a number, use [0]-[9] or the Numpad on the right.");
-      ImGui::BulletText("To select a cell, use Arrow keys or the mouse.");
-      ImGui::BulletText("To place a number, use [Space] or left button.");
-      ImGui::EndTabItem();
-    }
-    ImGui::EndTabBar();
-  }
   ImGui::End();
 }
 

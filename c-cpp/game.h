@@ -3,10 +3,12 @@
 
 #include "main.h"
 
-const char numStr[10][3]{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-
 namespace Game {
+// game.cpp
 void NumPadWindow(int *p_num);
+void TutorialWindow(const char *name, bool *p_open);
+bool LevelSelectWindow(const char *name, bool *p_open, std::string *p_level);
+// sudoku.cpp
 void SudokuWindow(bool *p_open);
 }  // namespace Game
 

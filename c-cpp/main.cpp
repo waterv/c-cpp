@@ -35,7 +35,7 @@ int main() {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
   // Setup Dear ImGui style
-  ImGui::StyleColorsDark();
+  ImGui::StyleColorsLight();
   // ImGui::StyleColorsClassic();
   ImVec4 clear_color{0.45f, 0.55f, 0.60f, 1.00f};
 
@@ -46,14 +46,14 @@ int main() {
   ImGui_ImplWin32_Init(hwnd);
   ImGui_ImplDX9_Init(g_pd3dDevice);
 
-  // io.Fonts->AddFontDefault();
-  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-  io.Fonts->AddFontFromFileTTF("../fonts/DroidSans.ttf", 16.0f);
-  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
   ImFont *font = io.Fonts->AddFontFromFileTTF(
       "../fonts/zpix.ttf", 12.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
   IM_ASSERT(font != NULL);
+  io.Fonts->AddFontDefault();
+  io.Fonts->AddFontFromFileTTF("../fonts/DroidSans.ttf", 16.0f);
+  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
+  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
+  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
 
   bool show_demo_window = true;
   bool show_game_window = false;
@@ -79,8 +79,6 @@ int main() {
     ImGui::NewFrame();
 
     if (show_demo_window) ImGui::ShowDemoWindow(&show_demo_window);
-
-    static int num = 1;
     if (show_game_window) Game::SudokuWindow(&show_game_window);
 
     {

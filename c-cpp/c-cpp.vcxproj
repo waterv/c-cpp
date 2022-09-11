@@ -154,7 +154,6 @@
     <ClInclude Include="..\deps\imgui\imstb_truetype.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="main.h" />
-    <ClInclude Include="sudoku.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\deps\imgui\imgui.cpp" />
@@ -164,7 +163,7 @@
     <ClCompile Include="..\deps\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="..\deps\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\deps\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="control.cpp" />
+    <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="sudoku.cpp" />

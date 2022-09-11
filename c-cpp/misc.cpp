@@ -39,11 +39,12 @@ void ImGui::ErrorText(const char* fmt, ...) {
   va_end(args);
 }
 
-void ImGui::Difficulty(int difficulty) {
-  static char difficulties[4][10]{"Easy", "Medium", "Hard", "Very Hard"};
-  ImGui::PushStyleButtonColored(4 - difficulty, 8);
-  ImGui::Button(difficulties[difficulty]);
+bool ImGui::Difficulty(int difficulty) {
+  static char difficulties[4][10]{"Easy", "Medium", "Hard", "V.Hard"};
+  ImGui::PushStyleButtonColored(3 - difficulty, 7);
+  bool pressed = ImGui::Button(difficulties[difficulty], {DifficultySize, 0});
   ImGui::PopStyleButtonColored();
+  return pressed;
 }
 
 bool ImGui::BeginCenterPopupModal(const char title[], bool* p_open) {
@@ -55,12 +56,12 @@ bool ImGui::BeginCenterPopupModal(const char title[], bool* p_open) {
 
 // Helper functions
 
-float ImGui::GetRealWidth(float width, int itemCount, bool hasPadding) {
+float GetRealWidth(float width, int itemCount, bool hasPadding) {
   return width + (itemCount - 1) * ImGui::GetStyle().ItemSpacing.x +
          (hasPadding ? 4 * ImGui::GetStyle().FramePadding.x : 0);
 }
 
-float ImGui::GetRealHeight(float height, int itemCount, bool hasPadding) {
+float GetRealHeight(float height, int itemCount, bool hasPadding) {
   return height + (itemCount - 1) * ImGui::GetStyle().ItemSpacing.y +
          (hasPadding ? 4 * ImGui::GetStyle().FramePadding.y : 0);
 }
