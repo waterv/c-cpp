@@ -22,6 +22,13 @@ int main() {
     return 1;
   }
 
+  // Initialize save data
+  try {
+    YAML::LoadFile("save.yaml");
+  } catch (std::runtime_error) {
+    std::ofstream("save.yaml") << '\n';
+  }
+
   // Show the window
   ::ShowWindow(hwnd, SW_SHOWDEFAULT);
   ::UpdateWindow(hwnd);
@@ -35,8 +42,7 @@ int main() {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
   // Setup Dear ImGui style
-  ImGui::StyleColorsLight();
-  // ImGui::StyleColorsClassic();
+  ImGui::StyleColorsDark();
   ImVec4 clear_color{0.45f, 0.55f, 0.60f, 1.00f};
 
   ImGui::GetStyle().FramePadding = {4, 4};

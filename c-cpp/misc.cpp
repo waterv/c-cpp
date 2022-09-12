@@ -47,13 +47,6 @@ bool ImGui::Difficulty(int difficulty) {
   return pressed;
 }
 
-bool ImGui::BeginCenterPopupModal(const char title[], bool* p_open) {
-  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-  return ImGui::BeginPopupModal(title, p_open,
-                                ImGuiWindowFlags_AlwaysAutoResize);
-}
-
 // Helper functions
 
 float GetRealWidth(float width, int itemCount, bool hasPadding) {

@@ -5,6 +5,9 @@
 #include <math.h>
 #include <tchar.h>
 
+#include <fstream>
+#include <vector>
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx9.h"
 #include "imgui/imgui_impl_win32.h"
@@ -37,7 +40,6 @@ void TimeText(int time);
 void TimeText(float time);
 void ErrorText(const char* fmt, ...);
 bool Difficulty(int difficulty);
-bool BeginCenterPopupModal(const char title[], bool* p_open);
 }  // namespace ImGui
 
 float GetRealWidth(float width, int itemCount, bool hasPadding = false);

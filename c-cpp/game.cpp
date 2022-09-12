@@ -17,13 +17,13 @@ void Game::NumPadWindow(int *p_num) {
     *p_num = 0;
 }
 
-void Game::TutorialWindow(const char *name, bool *p_open) {
-  ImGui::Begin((std::string("Tutorial###Tutorial of ") + name).c_str(), p_open,
+void Game::TutorialWindow(const char *game, bool *p_open) {
+  ImGui::Begin((std::string("Tutorial###Tutorial of ") + game).c_str(), p_open,
                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
                    ImGuiWindowFlags_AlwaysAutoResize);
-  auto node = YAML::LoadFile(std::string("../levels/") + name +
+  auto node = YAML::LoadFile(std::string("../levels/") + game +
                              "/info.yaml")["tutorials"];
-  if (ImGui::BeginTabBar((std::string("Tutorial Tabbar of ") + name).c_str(),
+  if (ImGui::BeginTabBar((std::string("Tutorial Tabbar of ") + game).c_str(),
                          ImGuiTabBarFlags_None)) {
     for (auto u : node) {
       auto title = u.first.as<std::string>();
@@ -40,61 +40,150 @@ void Game::TutorialWindow(const char *name, bool *p_open) {
   ImGui::End();
 }
 
-bool Game::LevelSelectWindow(const char *name, bool *p_open,
+struct GameLevel {
+  int index;
+  int difficulty;
+  std::string author;
+  float bestTime;
+};
+
+struct GameCategory {
+  std::string tid;
+  std::string origin;
+  std::vector<GameLevel> levels;
+};
+
+struct LevelSelectData {
+  YAML::Node node;
+  std::string popupId;
+  std::vector<GameCategory> categories;
+  std::string categoriesStr;
+  std::string selectedTId;
+  int selectedCategoryIndex;
+  int selectedPage;
+
+  LevelSelectData(const char *game);
+  GameCategory &selectedCategory();
+  void updateSaveData(const char *game);
+};
+
+LevelSelectData::LevelSelectData(const char *game) {
+  node =
+      YAML::LoadFile(std::string("../levels/") + game + "/info.yaml")["levels"];
+  popupId = std::string("Level Select###Level Select of ") + game;
+
+  bool hasSaveData =
+      Save::getLevelSelectData(game, &selectedTId, &selectedPage);
+  if (!hasSaveData) selectedCategoryIndex = 0;
+
+  categories.clear();
+  categoriesStr = "";
+  for (size_t i = 0; i < node.size(); i++) {
+    int n = node[i]["number"].as<int>();
+    auto tid = node[i]["tid"].as<std::string>();
+    if (hasSaveData && tid == selectedTId) selectedCategoryIndex = i;
+
+    auto origin = node[i]["origin"].as<std::string>();
+    categoriesStr += origin + '\0';
+
+    std::vector<GameLevel> levels;
+    for (int j = 1; j <= n; j++) {
+      std::string id = tid + "/" + std::to_string(j);
+      auto level =
+          YAML::LoadFile(std::string("../levels/") + game + "/" + id + ".yaml");
+      levels.push_back({j, level["difficulty"].as<int>(),
+                        level["author"].as<std::string>(),
+                        Save::getBestScore(game, id.c_str())});
+    }
+
+    categories.push_back({tid, origin, levels});
+  }
+}
+
+GameCategory &LevelSelectData::selectedCategory() {
+  return categories[selectedCategoryIndex];
+}
+
+void LevelSelectData::updateSaveData(const char *game) {
+  Save::setLevelSelectData(game, selectedCategory().tid, selectedPage);
+}
+
+bool Game::LevelSelectWindow(const char *game, bool *p_open,
                              std::string *p_level) {
   bool selected = false;
-  std::string popupId = std::string("Level Select###Level Select of ") + name;
+  static LevelSelectData d{game};
 
-  if (ImGui::BeginCenterPopupModal(popupId.c_str(), p_open)) {
-    auto node = YAML::LoadFile(std::string("../levels/") + name +
-                               "/info.yaml")["levels"];
+  if (ImGui::BeginPopupModal(d.popupId.c_str(), p_open,
+                             ImGuiWindowFlags_AlwaysAutoResize)) {
+    std::string tid = d.selectedCategory().tid;
+    if (ImGui::Combo("Category", &d.selectedCategoryIndex,
+                     d.categoriesStr.c_str())) {
+      d.selectedPage = 0;
+      d.updateSaveData(game);
+    }
 
-    if (ImGui::BeginTable((std::string("Level Table of ") + name).c_str(), 4)) {
+    if (ImGui::BeginTable((std::string("Level Table of ") + game).c_str(), 4)) {
       ImGui::TableSetupColumn("Difficulty");
       ImGui::TableSetupColumn("ID");
       ImGui::TableSetupColumn("Author");
-      ImGui::TableSetupColumn("From");
+      ImGui::TableSetupColumn("Best");
       ImGui::TableHeadersRow();
+      auto levels = d.selectedCategory().levels;
+      for (int i = 0;
+           (i < 10) && (10 * d.selectedPage + i < (int)levels.size()); i++) {
+        int index = 10 * d.selectedPage + i;
+        auto level = levels[index];
+        ImGui::PushID(i);
+        ImGui::TableNextRow();
 
-      int idNum = 0;
-      for (size_t i = 0; i < node.size(); i++) {
-        auto prefix = node[i]["prefix"].as<std::string>();
-        auto from = node[i]["origin"].as<std::string>();
-        auto n = node[i]["number"].as<int>();
-        for (int j = 1; j <= n; j++, idNum++) {
-          auto id = prefix + std::to_string(j);
-          auto level = YAML::LoadFile(std::string("../levels/") + name + "/" +
-                                      id + ".yaml");
-          auto author = level["author"].as<std::string>();
-          auto difficulty = level["difficulty"].as<int>();
-
-          ImGui::PushID(idNum);
-          ImGui::TableNextRow();
-
-          ImGui::TableSetColumnIndex(0);
-          if (ImGui::Difficulty(difficulty)) {
-            selected = true;
-            *p_open = false;
-            *p_level = id;
-          }
-
-          ImGui::TableSetColumnIndex(1);
-          ImGui::Text(id.c_str());
-
-          ImGui::TableSetColumnIndex(2);
-          ImGui::Text(author.c_str());
-
-          ImGui::TableSetColumnIndex(3);
-          ImGui::Text(from.c_str());
-
-          ImGui::PopID();
+        ImGui::TableSetColumnIndex(0);
+        if (ImGui::Difficulty(level.difficulty)) {
+          selected = true;
+          *p_open = false;
+          *p_level = tid + "/" + std::to_string(index + 1);
         }
+
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text(std::to_string(index + 1).c_str());
+
+        ImGui::TableSetColumnIndex(2);
+        ImGui::Text(level.author.c_str());
+
+        ImGui::TableSetColumnIndex(3);
+        if (level.bestTime)
+          ImGui::TimeText(level.bestTime);
+        else
+          ImGui::Text("-");
+
+        ImGui::PopID();
       }
       ImGui::EndTable();
+
+      if (d.selectedPage <= 0) {
+        ImGui::BeginDisabled();
+        ImGui::ArrowButton("Previous", ImGuiDir_Left);
+        ImGui::EndDisabled();
+      } else if (ImGui::ArrowButton("Previous", ImGuiDir_Left)) {
+        d.selectedPage -= 1;
+        d.updateSaveData(game);
+      }
+
+      int maxPage = (int)levels.size() / 10;
+      ImGui::SameLine();
+      ImGui::Text("%d / %d", d.selectedPage + 1, maxPage + 1);
+      ImGui::SameLine();
+
+      if (d.selectedPage >= maxPage) {
+        ImGui::BeginDisabled();
+        ImGui::ArrowButton("Next", ImGuiDir_Right);
+        ImGui::EndDisabled();
+      } else if (ImGui::ArrowButton("Next", ImGuiDir_Right)) {
+        d.selectedPage += 1;
+        d.updateSaveData(game);
+      }
     }
     ImGui::EndPopup();
   }
-
-  if (*p_open) ImGui::OpenPopup(popupId.c_str());
+  if (*p_open) ImGui::OpenPopup(d.popupId.c_str());
   return selected;
 }

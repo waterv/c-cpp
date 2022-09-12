@@ -166,6 +166,7 @@
     <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="misc.cpp" />
+    <ClCompile Include="save.cpp" />
     <ClCompile Include="sudoku.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

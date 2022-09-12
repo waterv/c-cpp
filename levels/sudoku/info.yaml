@@ -2,15 +2,17 @@ tutorials:
   Rules:
     - Place a number from 1 to 9 in each empty cell.
     - Each row, column and 3x3 block contains all the numbers from 1 to 9.
-    - (C) Nikoli 1984
   Controls:
     - To select a number, use [0]-[9] or the Numpad on the right.
     - To select a cell, use Arrow keys or the mouse.
     - To place a number, use [Space] or left button.
 levels:
-  - origin: ニコリのパズルＶ　数独
-    prefix: psv-
+  - tid: psv
+    origin: ニコリのパズルＶ　数独
     number: 6
-  - origin: ニコリのパズルＶ
-    prefix: psv12-
+  - tid: psv12
+    origin: ニコリのパズルＶ
     number: 1
+  - tid: vdos
+    origin: 日刊ナンプレ
+    number: 12
