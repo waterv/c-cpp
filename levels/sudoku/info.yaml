@@ -4,8 +4,11 @@ tutorials:
     - Each row, column and 3x3 block contains all the numbers from 1 to 9.
   Controls:
     - To select a number, use [0]-[9] or the Numpad on the right.
-    - To select a cell, use Arrow keys or the mouse.
-    - To place a number, use [Space] or left button.
+    - To select a cell, use Arrow keys or Left click.
+    - To place a number, use [Space] or Left click.
+    - To erase a number, use [Backspace] or the Eraser in the Numpad.
+    - To make a note, use [-] or Right click.
+    - Other operations and shortcuts can be found in the menu.
 levels:
   - tid: psv
     origin: ニコリのパズルＶ　数独

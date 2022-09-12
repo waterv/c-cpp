@@ -6945,7 +6945,7 @@ void ImGui::BeginDisabled(bool disabled)
 void ImGui::EndDisabled()
 {
     ImGuiContext& g = *GImGui;
-    IM_ASSERT(g.DisabledStackSize > 0);
+    //IM_ASSERT(g.DisabledStackSize > 0);
     g.DisabledStackSize--;
     bool was_disabled = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
     //PopItemFlag();

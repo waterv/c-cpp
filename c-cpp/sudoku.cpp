@@ -1,24 +1,40 @@
 #include "game.h"
 
-class Sudoku {
- public:
-  std::string id;
-  std::string author;
-  int difficulty;
+// 记录游戏中的一次操作, 用于撤销 / 重做功能.
+struct SudokuOperation {
+  int x, y, prev, curr;
+};
 
+// 游戏类继承自抽象模板类 Puzzle, 模板参数为操作记录类型.
+struct Sudoku : public Puzzle<SudokuOperation> {
+  // 题目内容.
   int clues[9][9];
+
+  // 当前盘面. 值为 0 表示空格, 1-9 表示填入数字, 11-19 表示标记数字.
   int board[9][9];
 
-  float startTime;
-  float endTime;
-  float bestTime;
+  // 错误类型或新纪录标记, 取值有 "row", "column", "block", "best".
+  std::string errType;
 
-  bool err;
-  char errtype[7];  // 取值有 "row", "column", "block", "best".
-  int erridx;
+  // 错误出现的位置.
+  int errIndex;
 
-  Sudoku(const char *filename);
-  void clear();
+  // 构造函数, 效果是重置游戏并进入指定关卡.
+  // 关卡 id 形如 "psv/1", 即 ../levels/<Game Name>/ 起的相对路径.
+  Sudoku(const char *id);
+
+  // 游戏操作的统一接口.
+  void input(int x, int y, int num);
+
+  // 实现撤销 / 重做 / 清空功能需要重写这三个虚函数.
+  // 调用时删去函数名末尾的 _.
+  void undo_(SudokuOperation op) { board[op.y][op.x] = op.prev; };
+  void redo_(SudokuOperation op) { board[op.y][op.x] = op.curr; };
+  void clear_() { memcpy(board[0], clues[0], sizeof(clues)); };
+
+  // 检查是否正解.
+  // 若是则更新 err, endTime, 可能更新 bestTime, errType;
+  // 若否则更新 err, errType, errIndex.
   void check();
 };
 
@@ -35,73 +51,78 @@ void Game::SudokuWindow(bool *p_open) {
   if (!ImGui::Begin("Sudoku", p_open,
                     ImGuiWindowFlags_NoResize |
                         ImGuiWindowFlags_AlwaysAutoResize |
-                        ImGuiWindowFlags_MenuBar)) {
-    ImGui::End();
-    return;
-  }
+                        ImGuiWindowFlags_MenuBar))
+    return ImGui::End();  // 如果窗口被折叠, 则直接短路不计算窗口内容.
 
   ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, {0.5f, 0.5f});
 
-  // Menu
+  // 窗口顶部的菜单栏.
   static bool showSelectLevel = false;
   static bool showTutorialWindow = false;
-  static int highlightMode = HighlightMode::HighlightMode_Blocks;
-  bool highlightModeBools[HighlightMode::HighlightModes];
-  for (int i = 0; i < HighlightMode::HighlightModes; i++)
+
+  static int highlightMode = HighlightMode_Blocks;
+  bool highlightModeBools[HighlightModes];
+  for (int i = 0; i < HighlightModes; i++)
     highlightModeBools[i] = highlightMode == i;
 
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("Game")) {
-      showSelectLevel = ImGui::MenuItem("Select Level..");
+      if (ImGui::MenuItem("Select Level..")) showSelectLevel = true;
+      ImGui::Separator();
+      if (ImGui::MenuItem("Undo", "Ctrl+Z", false, sudoku.canUndo()))
+        sudoku.undo();
+      if (ImGui::MenuItem("Redo", "Ctrl+Y", false, sudoku.canRedo()))
+        sudoku.redo();
+      ImGui::Separator();
       if (ImGui::MenuItem("Clear")) sudoku.clear();
       if (ImGui::MenuItem("Reset")) sudoku = Sudoku{sudoku.id.c_str()};
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
-      ImGui::MenuItem("Highlight", NULL, false, false);
+      ImGui::MenuItem("Highlight Mode", NULL, false, false);
       if (ImGui::MenuItem("3x3 Blocks", "Ctrl+1", highlightModeBools))
-        highlightMode = HighlightMode::HighlightMode_Blocks;
+        highlightMode = HighlightMode_Blocks;
       if (ImGui::MenuItem("Related Cells", "Ctrl+2", highlightModeBools + 1))
-        highlightMode = HighlightMode::HighlightMode_RelatedCells;
+        highlightMode = HighlightMode_RelatedCells;
       if (ImGui::MenuItem("Same Numbers", "Ctrl+3", highlightModeBools + 2))
-        highlightMode = HighlightMode::HighlightMode_SameNumbers;
+        highlightMode = HighlightMode_SameNumbers;
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Help")) {
-      showTutorialWindow = ImGui::MenuItem("Tutorial");
+      if (ImGui::MenuItem("Tutorial")) showTutorialWindow = true;
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
   }
 
-  // Level Select
-  static std::string levelSelected;
-  if (showSelectLevel)
-    if (Game::LevelSelectWindow("sudoku", &showSelectLevel, &levelSelected))
+  // 选择关卡和教程.
+  if (showSelectLevel) {
+    static std::string levelSelected;
+    if (sudoku.LevelSelectWindow(&showSelectLevel, &levelSelected))
       sudoku = Sudoku{levelSelected.c_str()};
+  }
+  if (showTutorialWindow) sudoku.TutorialWindow(&showTutorialWindow);
 
-  if (showTutorialWindow) Game::TutorialWindow("sudoku", &showTutorialWindow);
-
-  // Select highlight mode / number by keyboard
+  // 键盘操作.
   static int num = 1;
   if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
     for (ImGuiKey key = ImGuiKey_1; key <= ImGuiKey_3; key++)
       if (ImGui::IsKeyDown(key)) highlightMode = key - ImGuiKey_1;
+    if (ImGui::IsKeyReleased(ImGuiKey_Z) && sudoku.canUndo()) sudoku.undo();
+    if (ImGui::IsKeyReleased(ImGuiKey_Y) && sudoku.canRedo()) sudoku.redo();
   } else {
     for (ImGuiKey key = ImGuiKey_0; key <= ImGuiKey_9; key++)
       if (ImGui::IsKeyDown(key)) num = key - ImGuiKey_0;
   }
 
-  // Board
+  // 左侧的盘面.
   ImGui::BeginChild("SudokuChildL",
                     {GetRealWidth(9 * CellSize, 9, true),
                      GetRealHeight(9 * CellSize, 9, true)},
                     true);
   for (int y = 0; y < 9; y++) {
     for (int x = 0; x < 9; x++) {
-      bool disabled = (bool)sudoku.clues[y][x];
       bool highlighted;
-
       static int hoveredX = 0;
       static int hoveredY = 0;
       static int hoveredNum = 0;
@@ -120,17 +141,28 @@ void Game::SudokuWindow(bool *p_open) {
       if (x != 0) ImGui::SameLine();
 
       ImGui::PushID(x + y * 9);
+      bool disabled = sudoku.clues[y][x] != 0;
+      bool isNote = sudoku.board[y][x] > 9;
       if (disabled) ImGui::PushStyleTextDisabled();
-      if (ImGui::Selectable(sudoku.board[y][x]
-                                ? std::to_string(sudoku.board[y][x]).c_str()
-                                : "",
-                            highlighted, 0, ImVec2(CellSize, CellSize)))
-        if (!disabled && !sudoku.endTime) sudoku.board[y][x] = num;
+      if (isNote) ImGui::PushStyleTextPlotHistogram();
+      if (ImGui::Selectable(
+              sudoku.board[y][x] % 10
+                  ? std::to_string(sudoku.board[y][x] % 10).c_str()
+                  : "",
+              highlighted, 0, ImVec2(CellSize, CellSize)))
+        sudoku.input(x, y, num);
       if (ImGui::IsItemHovered()) {
         hoveredX = x;
         hoveredY = y;
         hoveredNum = sudoku.board[y][x];
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) ||
+            ImGui::IsKeyReleased(ImGuiKey_Minus)) {
+          sudoku.input(x, y, num + 10);
+        } else if (ImGui::IsKeyReleased(ImGuiKey_Backspace)) {
+          sudoku.input(x, y, 0);
+        }
       }
+      if (isNote) ImGui::PopStyleColor();
       if (disabled) ImGui::PopStyleColor();
       ImGui::PopID();
     }
@@ -139,21 +171,22 @@ void Game::SudokuWindow(bool *p_open) {
 
   ImGui::SameLine();
 
-  // Numpad
+  // 右侧的数字盘.
   ImGui::BeginChild(
       "SudokuChildR",
       {GetRealWidth(3 * 25, 3, true), GetRealHeight(4 * CellSize, 4, true)},
       true);
-  Game::NumPadWindow(&num);
+  ImGui::NumPadWindow(&num);
   ImGui::EndChild();
 
+  // 下方的提交、用时、关卡详情等信息.
   if (sudoku.endTime) {
-    if (sudoku.errtype[0] == 'b') {  // errtype == "best"
+    if (sudoku.errType == "best") {
       ImGui::PushStyleButtonColored(1, 7);
       ImGui::Button("Best!");
     } else {
       ImGui::PushStyleButtonColored(2, 7);
-      ImGui::Button("Clear");
+      ImGui::Button("Clear!");
     }
     ImGui::PopStyleButtonColored();
     ImGui::SameLine();
@@ -163,6 +196,7 @@ void Game::SudokuWindow(bool *p_open) {
     ImGui::SameLine();
     ImGui::TimeText((float)ImGui::GetTime() - sudoku.startTime);
   }
+
   if (sudoku.bestTime) {
     ImGui::SameLine();
     ImGui::Text("/");
@@ -172,10 +206,10 @@ void Game::SudokuWindow(bool *p_open) {
 
   if (sudoku.err) {
     ImGui::SameLine();
-    ImGui::ErrorText(" <Error in %s %d>", sudoku.errtype, sudoku.erridx + 1);
+    ImGui::ErrorText(" <Error in %s %d>", sudoku.errType.c_str(),
+                     sudoku.errIndex + 1);
   }
 
-  // Level details
   if (ImGui::Difficulty(sudoku.difficulty)) showSelectLevel = true;
   ImGui::SameLine();
   ImGui::Text("Author: %s", sudoku.author.c_str());
@@ -190,29 +224,19 @@ static int blocks[9][2]{
     {1, 1}, {1, 4}, {1, 7}, {4, 1}, {4, 4}, {4, 7}, {7, 1}, {7, 4}, {7, 7},
 };
 
-/**
- * @brief 重置游戏并进入指定关卡.
- * @param id 关卡 id
- */
 Sudoku::Sudoku(const char *id)
-    : id{id},
-      startTime{(float)ImGui::GetTime()},
-      endTime{0.0f},
-      err{false},
-      errtype{"row"},
-      erridx{0} {
-  auto node = YAML::LoadFile(std::string("../levels/sudoku/") + id + ".yaml");
-  this->author = node["author"].as<std::string>();
-  this->difficulty = node["difficulty"].as<int>();
-  this->bestTime = Save::getBestScore("sudoku", id);
-
+    : Puzzle{"sudoku", id}, errType{"row"}, errIndex{0} {
   for (int y = 0; y < 9; y++)
     for (int x = 0; x < 9; x++)
-      this->clues[y][x] = this->board[y][x] = node["question"][y][x].as<int>();
+      clues[y][x] = board[y][x] = node["question"][y][x].as<int>();
 }
 
-void Sudoku::clear() {
-  memcpy(this->board[0], this->clues[0], sizeof(this->clues));
+void Sudoku::input(int x, int y, int num) {
+  if (board[y][x] == num) return;
+  if (clues[y][x] != 0) return;
+  if (endTime) return;
+  pushHistory({x, y, board[y][x], num});
+  board[y][x] = num;
 }
 
 void Sudoku::check() {
@@ -224,8 +248,8 @@ void Sudoku::check() {
       cols[x] |= 1 << board[y][x];
     }
     if (row != 0x3fe) {
-      strcpy(errtype, "row");
-      erridx = y;
+      errType = "row";
+      errIndex = y;
       err = true;
       return;
     }
@@ -233,8 +257,8 @@ void Sudoku::check() {
 
   for (int x = 0; x < 9; x++)
     if (cols[x] != 0x3fe) {
-      strcpy(errtype, "column");
-      erridx = x;
+      errType = "column";
+      errIndex = x;
       err = true;
       return;
     }
@@ -245,19 +269,19 @@ void Sudoku::check() {
       block |= 1 << board[blocks[i][0] + neighbors[j][0]]
                          [blocks[i][1] + neighbors[j][1]];
     if (block != 0x3fe) {
-      strcpy(errtype, "block");
-      erridx = i;
+      errType = "block";
+      errIndex = i;
       err = true;
       return;
     }
   }
 
-  errtype[0] = '\0';
+  errType = "";
   err = false;
   endTime = (float)ImGui::GetTime();
   if (!bestTime || (endTime - startTime <= bestTime)) {
-    strcpy(errtype, "best");
-    Save::setBestScore("sudoku", id.c_str(), bestTime = endTime - startTime);
+    errType = "best";
+    Game::setBestTime("sudoku", id.c_str(), bestTime = endTime - startTime);
   }
   return;
 }

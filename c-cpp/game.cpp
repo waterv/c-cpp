@@ -1,22 +1,5 @@
 #include "game.h"
 
-void Game::NumPadWindow(int *p_num) {
-  int num = 0;
-  for (int y = 0; y < 3; y++) {
-    for (int x = 0; x < 3; x++) {
-      if (x != 0) ImGui::SameLine();
-      ImGui::PushID(++num);
-      if (ImGui::Selectable(std::to_string(num).c_str(), *p_num == num, 0,
-                            ImVec2(CellSize, CellSize)))
-        *p_num = num;
-      ImGui::PopID();
-    }
-  }
-  if (ImGui::Selectable("Eraser", *p_num == 0, 0,
-                        ImVec2(GetRealWidth(3 * CellSize, 3), CellSize)))
-    *p_num = 0;
-}
-
 void Game::TutorialWindow(const char *game, bool *p_open) {
   ImGui::Begin((std::string("Tutorial###Tutorial of ") + game).c_str(), p_open,
                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
@@ -73,7 +56,7 @@ LevelSelectData::LevelSelectData(const char *game) {
   popupId = std::string("Level Select###Level Select of ") + game;
 
   bool hasSaveData =
-      Save::getLevelSelectData(game, &selectedTId, &selectedPage);
+      Game::getLevelSelectData(game, &selectedTId, &selectedPage);
   if (!hasSaveData) selectedCategoryIndex = 0;
 
   categories.clear();
@@ -93,7 +76,7 @@ LevelSelectData::LevelSelectData(const char *game) {
           YAML::LoadFile(std::string("../levels/") + game + "/" + id + ".yaml");
       levels.push_back({j, level["difficulty"].as<int>(),
                         level["author"].as<std::string>(),
-                        Save::getBestScore(game, id.c_str())});
+                        Game::getBestTime(game, id.c_str())});
     }
 
     categories.push_back({tid, origin, levels});
@@ -105,13 +88,19 @@ GameCategory &LevelSelectData::selectedCategory() {
 }
 
 void LevelSelectData::updateSaveData(const char *game) {
-  Save::setLevelSelectData(game, selectedCategory().tid, selectedPage);
+  Game::setLevelSelectData(game, selectedCategory().tid, selectedPage);
 }
 
 bool Game::LevelSelectWindow(const char *game, bool *p_open,
                              std::string *p_level) {
   bool selected = false;
   static LevelSelectData d{game};
+
+  static bool init = true;
+  if (init) {
+    d = LevelSelectData{game};
+    init = false;
+  }
 
   if (ImGui::BeginPopupModal(d.popupId.c_str(), p_open,
                              ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -184,6 +173,9 @@ bool Game::LevelSelectWindow(const char *game, bool *p_open,
     }
     ImGui::EndPopup();
   }
-  if (*p_open) ImGui::OpenPopup(d.popupId.c_str());
+  if (*p_open)
+    ImGui::OpenPopup(d.popupId.c_str());
+  else
+    init = true;
   return selected;
 }
