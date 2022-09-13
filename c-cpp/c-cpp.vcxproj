@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>../deps;$(IncludePath)</IncludePath>
+    <IncludePath>../deps;./;$(IncludePath)</IncludePath>
     <SourcePath>../deps;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -166,8 +166,9 @@
     <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="misc.cpp" />
+    <ClCompile Include="puzzles\kakuro.cpp" />
+    <ClCompile Include="puzzles\sudoku.cpp" />
     <ClCompile Include="save.cpp" />
-    <ClCompile Include="sudoku.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

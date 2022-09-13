@@ -12,6 +12,9 @@
     <Filter Include="ImGui">
       <UniqueIdentifier>{8f5012b9-9693-4f68-b9a4-37e265d5e7a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\Puzzles">
+      <UniqueIdentifier>{d55254f8-3487-42b3-8cdd-b8c52db24d39}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.h">
@@ -49,9 +52,6 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="sudoku.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="misc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -81,6 +81,12 @@
     </ClCompile>
     <ClCompile Include="save.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="puzzles\sudoku.cpp">
+      <Filter>源文件\Puzzles</Filter>
+    </ClCompile>
+    <ClCompile Include="puzzles\kakuro.cpp">
+      <Filter>源文件\Puzzles</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

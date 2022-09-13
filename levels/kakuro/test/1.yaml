@@ -1,0 +1,12 @@
+author: SP1_winter
+difficulty: 0
+width: 3
+height: 3
+right:
+  - [-1, -1, -1]
+  - [8, 0, 0]
+  - [14, 0, 0]
+bottom:
+  - [-1, 10, 12]
+  - [-1, 0, 0]
+  - [-1, 0, 0]

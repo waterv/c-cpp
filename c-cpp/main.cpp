@@ -4,6 +4,8 @@ static LPDIRECT3D9 g_pD3D = NULL;
 static LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;
 static D3DPRESENT_PARAMETERS g_d3dpp{};
 
+extern ImFont *defaultFont = NULL;
+
 int main() {
   // Create application window
   // ImGui_ImplWin32_EnableDpiAwareness();
@@ -55,14 +57,15 @@ int main() {
   ImFont *font = io.Fonts->AddFontFromFileTTF(
       "../fonts/zpix.ttf", 12.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
   IM_ASSERT(font != NULL);
-  io.Fonts->AddFontDefault();
+  defaultFont = io.Fonts->AddFontDefault();
   io.Fonts->AddFontFromFileTTF("../fonts/DroidSans.ttf", 16.0f);
   // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
   // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
   // io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
 
   bool show_demo_window = true;
-  bool show_game_window = false;
+  bool show_sudoku_window = false;
+  bool show_kakuro_window = false;
   bool show_another_window = false;
 
   // Main loop
@@ -85,7 +88,8 @@ int main() {
     ImGui::NewFrame();
 
     if (show_demo_window) ImGui::ShowDemoWindow(&show_demo_window);
-    if (show_game_window) Game::SudokuWindow(&show_game_window);
+    if (show_sudoku_window) Game::SudokuWindow(&show_sudoku_window);
+    if (show_kakuro_window) Game::KakuroWindow(&show_kakuro_window);
 
     {
       static float f = 0.0f;
@@ -97,7 +101,8 @@ int main() {
 
       ImGui::Text("This is some useful text.");
       ImGui::Checkbox("Demo Window", &show_demo_window);
-      ImGui::Checkbox("Game Window", &show_game_window);
+      ImGui::Checkbox("Sudoku Window", &show_sudoku_window);
+      ImGui::Checkbox("Kakuro Window", &show_kakuro_window);
       ImGui::Checkbox("Another Window", &show_another_window);
 
       ImGui::SliderFloat("float", &f, min, max);

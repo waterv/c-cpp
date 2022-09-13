@@ -3,6 +3,9 @@
 
 #include "main.h"
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) < (b) ? (b) : (a))
+
 const int CellSize = 25;
 const int DifficultySize = 60;
 
@@ -13,12 +16,23 @@ void PushStyleTextPlotHistogram();
 void PushStyleButtonColored(int idx, int max);
 void PopStyleButtonColored();
 
+ImU32 BorderColor();
+ImU32 BackgroundColor(float alpha = 0.3f);
+ImVec4 GetPos(ImVec2 screenPos, int x, int y);
+
+void DrawLine(ImDrawList *drawList, ImVec4 pos, ImU32 col = BorderColor(),
+              float thickness = 1.0f);
+void DrawRectFilled(ImDrawList *drawList, ImVec4 pos,
+                    ImU32 col = BackgroundColor());
+void DrawBorder(ImDrawList *drawList, ImVec2 screenPos, int x, int y,
+                ImGuiDir dir, ImU32 col = BorderColor(),
+                float thickness = 1.0f);
+
 void TimeText(int time);
 void TimeText(float time);
-void ErrorText(const char *fmt, ...);
 bool Difficulty(int difficulty);
 
-void NumPadWindow(int *p_num);
+void NumPadChild(const char *id, int *p_num);
 }  // namespace ImGui
 
 float GetRealWidth(float width, int itemCount, bool hasPadding = false);
@@ -36,8 +50,13 @@ void setBestTime(const char *game, const char *id, float time);
 bool getLevelSelectData(const char *game, std::string *tid, int *page);
 void setLevelSelectData(const char *game, std::string tid, int page);
 
-void SudokuWindow(bool *p_open);  // sudoku.cpp
+void SudokuWindow(bool *p_open);  // cpp
+void KakuroWindow(bool *p_open);  // kakuro.cpp
 }  // namespace Game
+
+struct NumberOperation {
+  int x, y, prev, curr;
+};
 
 template <class Operation>
 struct Puzzle {
@@ -55,6 +74,10 @@ struct Puzzle {
   float bestTime;
 
   bool err;
+  std::string errType;
+
+  bool showTutorial;
+  bool showLevelSelect;
 
   Puzzle(const char *game, const char *id)
       : game{game},
@@ -63,7 +86,10 @@ struct Puzzle {
         historyIndex{-1},
         startTime{(float)ImGui::GetTime()},
         endTime{0.0f},
-        err{false} {
+        err{false},
+        errType{""},
+        showTutorial{false},
+        showLevelSelect{false} {
     node =
         YAML::LoadFile(std::string("../levels/") + game + "/" + id + ".yaml");
     author = node["author"].as<std::string>();
@@ -71,23 +97,74 @@ struct Puzzle {
     bestTime = Game::getBestTime(game, id);
   };
 
-  void TutorialWindow(bool *p_open) const {
-    Game::TutorialWindow(game.c_str(), p_open);
+  void TutorialWindow() {
+    if (showTutorial) Game::TutorialWindow(game.c_str(), &showTutorial);
   };
-  bool LevelSelectWindow(bool *p_open, std::string *p_level) const {
-    return Game::LevelSelectWindow(game.c_str(), p_open, p_level);
+
+  bool LevelSelectWindow(std::string *p_id) {
+    if (!showLevelSelect) return false;
+    return Game::LevelSelectWindow(game.c_str(), &showLevelSelect, p_id);
   };
+
+  void LevelDetails(const char *fmt, ...) {
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
+      if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
+        if (ImGui::IsKeyReleased(ImGuiKey_O)) showLevelSelect = true;
+        if (ImGui::IsKeyReleased(ImGuiKey_Z) && canUndo()) undo();
+        if (ImGui::IsKeyReleased(ImGuiKey_Y) && canRedo()) redo();
+      }
+
+    if (endTime) {
+      if (errType == "best") {
+        ImGui::PushStyleButtonColored(1, 7);
+        ImGui::Button("Best!");
+      } else {
+        ImGui::PushStyleButtonColored(2, 7);
+        ImGui::Button("Clear!");
+      }
+      ImGui::PopStyleButtonColored();
+      ImGui::SameLine();
+      ImGui::TimeText(endTime - startTime);
+    } else {
+      if (ImGui::Button("Check")) check();
+      ImGui::SameLine();
+      ImGui::TimeText((float)ImGui::GetTime() - startTime);
+    }
+
+    if (bestTime) {
+      ImGui::SameLine();
+      ImGui::Text("/");
+      ImGui::SameLine();
+      ImGui::TimeText(bestTime);
+    }
+
+    if (err) {
+      ImGui::SameLine();
+      va_list args;
+      va_start(args, fmt);
+      ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 0.0f, 0.0f, 1.0f});
+      ImGui::TextV(fmt, args);
+      ImGui::PopStyleColor();
+      va_end(args);
+    }
+
+    if (ImGui::Difficulty(difficulty)) showLevelSelect = true;
+    ImGui::SameLine();
+    ImGui::Text("Author: %s", author.c_str());
+  }
 
   bool canUndo() const { return historyIndex >= 0; };
   bool canRedo() const { return historyIndex < (int)history.size() - 1; }
   virtual void undo_(Operation op) { return; };
   virtual void redo_(Operation op) { return; };
   void undo() {
+    if (endTime) return;
     if (!canUndo()) return;
     undo_(history[historyIndex]);
     historyIndex -= 1;
   };
   void redo() {
+    if (endTime) return;
     if (!canRedo()) return;
     historyIndex += 1;
     redo_(history[historyIndex]);
@@ -103,9 +180,22 @@ struct Puzzle {
 
   virtual void clear_() { return; };
   void clear() {
+    if (endTime) return;
     history.clear();
     historyIndex = -1;
     clear_();
+  }
+
+  virtual void check() { return; };
+  void win() {
+    errType = "";
+    err = false;
+    endTime = (float)ImGui::GetTime();
+    if (!bestTime || (endTime - startTime <= bestTime)) {
+      errType = "best";
+      Game::setBestTime(game.c_str(), id.c_str(),
+                        bestTime = endTime - startTime);
+    }
   }
 };
 
