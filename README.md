@@ -5,6 +5,7 @@
   - 游戏关卡以 `yaml` 格式保存并利用 [`yaml-cpp`](https://github.com/jbeder/yaml-cpp) 库进行解析.
   - 基本完成了 Sudoku (数独) 游戏, 可作为开发其他游戏的示例. 见 `game.h`, `sudoku.cpp` 与 `/levels/sudoku`.
   - 基本完成了 Kakuro (数和) 游戏.
+  - 完成了一点点 Akari (美术馆) 游戏.
 
 ## 初始化
 将项目克隆到本地:
