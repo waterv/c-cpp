@@ -105,7 +105,7 @@ void SudokuWindow(bool *p_open) {
   // 选择数字和高亮模式的键鼠快捷键.
   // Ctrl+O/Z/Y 三个通用快捷键被 LevelDetails 方法接管.
   static int num = 1;
-  if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
+  if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
     if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
       for (ImGuiKey key = ImGuiKey_1; key <= ImGuiKey_3; key++)
         if (ImGui::IsKeyDown(key)) highlightMode = key - ImGuiKey_1;
@@ -114,11 +114,12 @@ void SudokuWindow(bool *p_open) {
         if (ImGui::IsKeyDown(key)) num = key - ImGuiKey_0;
     }
 
-  float wheel = ImGui::GetIO().MouseWheel;
-  if (wheel > 0)
-    num = (num + 10 - 1) % 10;
-  else if (wheel < 0)
-    num = (num + 1) % 10;
+    float wheel = ImGui::GetIO().MouseWheel;
+    if (wheel > 0)
+      num = (num + 10 - 1) % 10;
+    else if (wheel < 0)
+      num = (num + 1) % 10;
+  }
 
   // 左侧的盘面.
   ImGui::BeginChild(

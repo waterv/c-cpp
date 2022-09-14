@@ -28,7 +28,7 @@ struct Kakuro : public Puzzle<KakuroOperation> {
 enum Bordered { Bordered_Right = 1 << 0, Bordered_Bottom = 1 << 1 };
 
 void KakuroWindow(bool* p_open) {
-  static Kakuro kakuro{"bachelor_seal/1"};
+  static Kakuro kakuro{"psv/1"};
 
   if (!ImGui::Begin("Kakuro", p_open,
                     ImGuiWindowFlags_NoResize |
