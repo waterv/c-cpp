@@ -8,6 +8,7 @@
 
 void SudokuWindow(bool *p_open);
 void KakuroWindow(bool *p_open);
+void AkariWindow(bool* p_open);
 
 // 棋盘格子的大小.
 const int CellSize = 25;

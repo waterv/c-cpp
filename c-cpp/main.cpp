@@ -66,6 +66,7 @@ int main() {
   bool show_demo_window = true;
   bool show_sudoku_window = false;
   bool show_kakuro_window = false;
+  bool show_akari_window = false;
   bool show_another_window = false;
 
   // Main loop
@@ -90,6 +91,7 @@ int main() {
     if (show_demo_window) ImGui::ShowDemoWindow(&show_demo_window);
     if (show_sudoku_window) SudokuWindow(&show_sudoku_window);
     if (show_kakuro_window) KakuroWindow(&show_kakuro_window);
+    if (show_akari_window) AkariWindow(&show_akari_window);
 
     {
       static float f = 0.0f;
@@ -103,6 +105,7 @@ int main() {
       ImGui::Checkbox("Demo Window", &show_demo_window);
       ImGui::Checkbox("Sudoku Window", &show_sudoku_window);
       ImGui::Checkbox("Kakuro Window", &show_kakuro_window);
+      ImGui::Checkbox("Akari Window", &show_akari_window);
       ImGui::Checkbox("Another Window", &show_another_window);
 
       ImGui::SliderFloat("float", &f, min, max);
