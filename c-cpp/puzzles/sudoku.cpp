@@ -28,7 +28,7 @@ struct Sudoku : public Puzzle<SudokuOperation> {
   // 调用时删去函数名末尾的 _.
   void undo_(SudokuOperation op) { board[op.y][op.x] = op.prev; };
   void redo_(SudokuOperation op) { board[op.y][op.x] = op.curr; };
-  void clear_() { memset(board[0], 0, sizeof(board)); };
+  void clear_() { memcpy(board[0], clues[0], sizeof(board)); };
 
   // 检查是否正解.
   // 若是则更新 err, endTime, 可能更新 bestTime, errType;
@@ -43,7 +43,7 @@ enum HighlightMode {
   HighlightModes,
 };
 
-void Game::SudokuWindow(bool *p_open) {
+void SudokuWindow(bool *p_open) {
   static Sudoku sudoku{"psv/1"};
 
   if (!ImGui::Begin("Sudoku", p_open,

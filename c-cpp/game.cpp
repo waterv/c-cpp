@@ -1,181 +1,131 @@
 #include "game.h"
 
-void Game::TutorialWindow(const char *game, bool *p_open) {
-  ImGui::Begin((std::string("Tutorial###Tutorial of ") + game).c_str(), p_open,
-               ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-                   ImGuiWindowFlags_AlwaysAutoResize);
-  auto node = YAML::LoadFile(std::string("../levels/") + game +
-                             "/info.yaml")["tutorials"];
-  if (ImGui::BeginTabBar((std::string("Tutorial Tabbar of ") + game).c_str(),
-                         ImGuiTabBarFlags_None)) {
-    for (auto u : node) {
-      auto title = u.first.as<std::string>();
-      if (ImGui::BeginTabItem(title.c_str())) {
-        for (auto v : u.second) {
-          auto text = v.as<std::string>();
-          ImGui::BulletText(text.c_str());
-        }
-        ImGui::EndTabItem();
-      }
-    }
-    ImGui::EndTabBar();
-  }
-  ImGui::End();
+// Style Settings
+
+void PopStyle(int time) {
+  for (int i = 0; i < time; i++) ImGui::PopStyleColor();
 }
 
-struct GameLevel {
-  int index;
-  int difficulty;
-  std::string author;
-  float bestTime;
-};
+void ImGui::PushStyleTextDisabled() {
+  ImGui::PushStyleColor(ImGuiCol_Text,
+                        ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+}
 
-struct GameCategory {
-  std::string tid;
-  std::string origin;
-  std::vector<GameLevel> levels;
-};
+void ImGui::PushStyleTextPlotHistogram() {
+  ImGui::PushStyleColor(ImGuiCol_Text,
+                        ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram));
+}
 
-struct LevelSelectData {
-  YAML::Node node;
-  std::string popupId;
-  std::vector<GameCategory> categories;
-  std::string categoriesStr;
-  std::string selectedTId;
-  int selectedCategoryIndex;
-  int selectedPage;
+void ImGui::PushStyleButtonColored(int idx, int max) {
+  float val = (float)idx / max;
+  ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(val, 0.6f, 0.6f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                        (ImVec4)ImColor::HSV(val, 0.7f, 0.7f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                        (ImVec4)ImColor::HSV(val, 0.8f, 0.8f));
+}
 
-  LevelSelectData(const char *game);
-  GameCategory &selectedCategory();
-  void updateSaveData(const char *game);
-};
+void ImGui::PopStyleButtonColored() { PopStyle(3); }
 
-LevelSelectData::LevelSelectData(const char *game) {
-  node =
-      YAML::LoadFile(std::string("../levels/") + game + "/info.yaml")["levels"];
-  popupId = std::string("Level Select###Level Select of ") + game;
+ImU32 ImGui::BorderColor() {
+  ImU32 result = ImColor{ImGui::GetStyleColorVec4(ImGuiCol_Text)};
+  return result;
+}
 
-  bool hasSaveData =
-      Game::getLevelSelectData(game, &selectedTId, &selectedPage);
-  if (!hasSaveData) selectedCategoryIndex = 0;
+ImU32 ImGui::BackgroundColor(float alpha) {
+  auto color = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+  color.w = alpha;
+  ImU32 result = ImColor{color};
+  return result;
+}
 
-  categories.clear();
-  categoriesStr = "";
-  for (size_t i = 0; i < node.size(); i++) {
-    int n = node[i]["number"].as<int>();
-    auto tid = node[i]["tid"].as<std::string>();
-    if (hasSaveData && tid == selectedTId) selectedCategoryIndex = i;
+ImVec4 ImGui::GetPos(ImVec2 screenPos, int x, int y) {
+  auto pad = ImGui::GetStyle().ItemSpacing;
+  float x1 = screenPos.x + pad.x / 2 + GetRealWidth(CellSize, x - 1);
+  float y1 = screenPos.y + pad.y / 2 + GetRealHeight(CellSize, y - 1);
+  float x2 = pad.x + x1 + CellSize;
+  float y2 = pad.y + y1 + CellSize;
+  return {x1, y1, x2, y2};
+}
 
-    auto origin = node[i]["origin"].as<std::string>();
-    categoriesStr += origin + '\0';
+void ImGui::DrawLine(ImDrawList* drawList, ImVec4 pos, ImU32 col,
+                     float thickness) {
+  drawList->AddLine({pos.x, pos.y}, {pos.z, pos.w}, col, thickness);
+}
 
-    std::vector<GameLevel> levels;
-    for (int j = 1; j <= n; j++) {
-      std::string id = tid + "/" + std::to_string(j);
-      auto level =
-          YAML::LoadFile(std::string("../levels/") + game + "/" + id + ".yaml");
-      levels.push_back({j, level["difficulty"].as<int>(),
-                        level["author"].as<std::string>(),
-                        Game::getBestTime(game, id.c_str())});
-    }
+void ImGui::DrawRectFilled(ImDrawList* drawList, ImVec4 pos, ImU32 col) {
+  drawList->AddRectFilled({pos.x, pos.y}, {pos.z, pos.w}, col);
+}
 
-    categories.push_back({tid, origin, levels});
+void ImGui::DrawBorder(ImDrawList* drawList, ImVec2 screenPos, int x, int y,
+                       ImGuiDir dir, ImU32 col, float thickness) {
+  auto pos = ImGui::GetPos(screenPos, x, y);
+  float o = thickness / 2;  // Offset
+  switch (dir) {
+    case ImGuiDir_Left:
+      return drawList->AddLine({pos.x, pos.y - o}, {pos.x, pos.w + o}, col,
+                               thickness);
+    case ImGuiDir_Right:
+      return drawList->AddLine({pos.z, pos.y - o}, {pos.z, pos.w + o}, col,
+                               thickness);
+    case ImGuiDir_Up:
+      return drawList->AddLine({pos.x - o, pos.y}, {pos.z + o, pos.y}, col,
+                               thickness);
+    case ImGuiDir_Down:
+      return drawList->AddLine({pos.x - o, pos.w}, {pos.z + o, pos.w}, col,
+                               thickness);
   }
 }
 
-GameCategory &LevelSelectData::selectedCategory() {
-  return categories[selectedCategoryIndex];
+// Customized Windows
+
+void ImGui::NumPadChild(const char* id, int* p_num) {
+  ImGui::BeginChild(
+      id, {GetRealWidth(CellSize, 3, true), GetRealHeight(CellSize, 4, true)},
+      true);
+  int num = 0;
+  for (int y = 0; y < 3; y++) {
+    for (int x = 0; x < 3; x++) {
+      if (x != 0) ImGui::SameLine();
+      ImGui::PushID(++num);
+      if (ImGui::Selectable(std::to_string(num).c_str(), *p_num == num, 0,
+                            ImVec2(CellSize, CellSize)))
+        *p_num = num;
+      ImGui::PopID();
+    }
+  }
+  if (ImGui::Selectable("Eraser", *p_num == 0, 0,
+                        ImVec2(GetRealWidth(CellSize, 3), CellSize)))
+    *p_num = 0;
+  ImGui::EndChild();
 }
 
-void LevelSelectData::updateSaveData(const char *game) {
-  Game::setLevelSelectData(game, selectedCategory().tid, selectedPage);
+// Helper functions
+
+float GetRealWidth(float width, int itemCount, bool hasPadding) {
+  return itemCount * width + (itemCount - 1) * ImGui::GetStyle().ItemSpacing.x +
+         (hasPadding ? 4 * ImGui::GetStyle().FramePadding.x : 0);
 }
 
-bool Game::LevelSelectWindow(const char *game, bool *p_open,
-                             std::string *p_level) {
-  bool selected = false;
-  static LevelSelectData d{game};
+float GetRealHeight(float height, int itemCount, bool hasPadding) {
+  return itemCount * height +
+         (itemCount - 1) * ImGui::GetStyle().ItemSpacing.y +
+         (hasPadding ? 4 * ImGui::GetStyle().FramePadding.y : 0);
+}
 
-  static bool init = true;
-  if (init) {
-    d = LevelSelectData{game};
-    init = false;
-  }
-
-  if (ImGui::BeginPopupModal(d.popupId.c_str(), p_open,
-                             ImGuiWindowFlags_AlwaysAutoResize)) {
-    std::string tid = d.selectedCategory().tid;
-    if (ImGui::Combo("Category", &d.selectedCategoryIndex,
-                     d.categoriesStr.c_str())) {
-      d.selectedPage = 0;
-      d.updateSaveData(game);
+std::vector<std::string> split(std::string str, char delim) {
+  std::vector<std::string> result;
+  size_t previous = 0;
+  size_t current = str.find(delim);
+  while (current != std::string::npos) {
+    if (current > previous) {
+      result.push_back(str.substr(previous, current - previous));
     }
-
-    if (ImGui::BeginTable((std::string("Level Table of ") + game).c_str(), 4)) {
-      ImGui::TableSetupColumn("Difficulty");
-      ImGui::TableSetupColumn("ID");
-      ImGui::TableSetupColumn("Author");
-      ImGui::TableSetupColumn("Best");
-      ImGui::TableHeadersRow();
-      auto levels = d.selectedCategory().levels;
-      for (int i = 0;
-           (i < 10) && (10 * d.selectedPage + i < (int)levels.size()); i++) {
-        int index = 10 * d.selectedPage + i;
-        auto level = levels[index];
-        ImGui::PushID(i);
-        ImGui::TableNextRow();
-
-        ImGui::TableSetColumnIndex(0);
-        if (ImGui::Difficulty(level.difficulty)) {
-          selected = true;
-          *p_open = false;
-          *p_level = tid + "/" + std::to_string(index + 1);
-        }
-
-        ImGui::TableSetColumnIndex(1);
-        ImGui::Text(std::to_string(index + 1).c_str());
-
-        ImGui::TableSetColumnIndex(2);
-        ImGui::Text(level.author.c_str());
-
-        ImGui::TableSetColumnIndex(3);
-        if (level.bestTime)
-          ImGui::TimeText(level.bestTime);
-        else
-          ImGui::Text("-");
-
-        ImGui::PopID();
-      }
-      ImGui::EndTable();
-
-      if (d.selectedPage <= 0) {
-        ImGui::BeginDisabled();
-        ImGui::ArrowButton("Previous", ImGuiDir_Left);
-        ImGui::EndDisabled();
-      } else if (ImGui::ArrowButton("Previous", ImGuiDir_Left)) {
-        d.selectedPage -= 1;
-        d.updateSaveData(game);
-      }
-
-      int maxPage = (int)levels.size() / 10;
-      ImGui::SameLine();
-      ImGui::Text("%d / %d", d.selectedPage + 1, maxPage + 1);
-      ImGui::SameLine();
-
-      if (d.selectedPage >= maxPage) {
-        ImGui::BeginDisabled();
-        ImGui::ArrowButton("Next", ImGuiDir_Right);
-        ImGui::EndDisabled();
-      } else if (ImGui::ArrowButton("Next", ImGuiDir_Right)) {
-        d.selectedPage += 1;
-        d.updateSaveData(game);
-      }
-    }
-    ImGui::EndPopup();
+    previous = current + 1;
+    current = str.find(delim, previous);
   }
-  if (*p_open)
-    ImGui::OpenPopup(d.popupId.c_str());
-  else
-    init = true;
-  return selected;
+  if (previous != str.size()) {
+    result.push_back(str.substr(previous));
+  }
+  return result;
 }

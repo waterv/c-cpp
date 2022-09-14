@@ -17,7 +17,8 @@ struct Kakuro : public Puzzle<KakuroOperation> {
   void undo_(KakuroOperation op) { board[op.y][op.x] = op.prev; };
   void redo_(KakuroOperation op) { board[op.y][op.x] = op.curr; };
   void clear_() {
-    for (auto& u : board) u.clear();
+    for (auto& u : board)
+      for (auto& v : u) v = 0;
   };
 
   bool isRelated(int x1, int y1, int x2, int y2) const;
@@ -26,7 +27,7 @@ struct Kakuro : public Puzzle<KakuroOperation> {
 
 enum Bordered { Bordered_Right = 1 << 0, Bordered_Bottom = 1 << 1 };
 
-void Game::KakuroWindow(bool* p_open) {
+void KakuroWindow(bool* p_open) {
   static Kakuro kakuro{"bachelor_seal/1"};
 
   if (!ImGui::Begin("Kakuro", p_open,

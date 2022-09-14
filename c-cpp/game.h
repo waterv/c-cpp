@@ -6,197 +6,140 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 
+void SudokuWindow(bool *p_open);
+void KakuroWindow(bool *p_open);
+
+// 棋盘格子的大小.
 const int CellSize = 25;
-const int DifficultySize = 60;
 
 namespace ImGui {
-// misc.cpp
+
+/**
+ * @brief 将 ImGuiCol_Text 样式设置为 ImGuiCol_TextDisabled.
+ */
 void PushStyleTextDisabled();
+
+/**
+ * @brief 将 ImGuiCol_Text 样式设置为 ImGuiCol_PlotHistogram.
+ */
 void PushStyleTextPlotHistogram();
+
+/**
+ * @brief 将 ImGuiCol_Button 样式设置为色相为 idx/max 的系列颜色.
+ * 该样式需使用 ImGui::PopStyleButtonColored() 函数结束.
+ */
 void PushStyleButtonColored(int idx, int max);
 void PopStyleButtonColored();
 
 ImU32 BorderColor();
 ImU32 BackgroundColor(float alpha = 0.3f);
+
+/**
+ * @brief 取棋盘上某格的左上右下坐标.
+ *
+ * @param screenPos 使用 ImGui::GetCursorScreenPos() 函数获取.
+ * @param x 该格是一行中从左到右第几个, 从 1 开始.
+ * @param y 该格是一列中从上到下第几个, 从 1 开始.
+ * @return 左上 (x, y), 右下 (z, w).
+ */
 ImVec4 GetPos(ImVec2 screenPos, int x, int y);
 
 void DrawLine(ImDrawList *drawList, ImVec4 pos, ImU32 col = BorderColor(),
               float thickness = 1.0f);
 void DrawRectFilled(ImDrawList *drawList, ImVec4 pos,
                     ImU32 col = BackgroundColor());
+
+/**
+ * @brief 为棋盘上某格绘制某方向上的边框.
+ *
+ * @param drawList 使用 ImGui::GetWindowDrawList() 函数获取.
+ * @param screenPos 使用 ImGui::GetCursorScreenPos() 函数获取.
+ * @param x 该格是一行中从左到右第几个, 从 1 开始.
+ * @param y 该格是一列中从上到下第几个, 从 1 开始.
+ * @param dir ImGuiDir_{Left,Right,Up,Down}
+ */
 void DrawBorder(ImDrawList *drawList, ImVec2 screenPos, int x, int y,
                 ImGuiDir dir, ImU32 col = BorderColor(),
                 float thickness = 1.0f);
 
-void TimeText(int time);
-void TimeText(float time);
-bool Difficulty(int difficulty);
-
+/**
+ * @brief 数字盘子窗口.
+ *
+ * @param id 子窗口的 ID.
+ * @param p_num 当前选中数字的指针.
+ */
 void NumPadChild(const char *id, int *p_num);
+
 }  // namespace ImGui
 
+/**
+ * @brief 获取若干个相同宽度的组件所占据的,
+ * 考虑了组件间距和内补的实际宽度.
+ *
+ * @param width 单个组件的宽度.
+ * @param itemCount 组件数目.
+ * @param hasPadding 欲获取的宽度是否用于有边框子窗口.
+ */
 float GetRealWidth(float width, int itemCount, bool hasPadding = false);
+
+/**
+ * @brief 获取若干个相同高度的组件所占据的,
+ * 考虑了组件间距和内补的实际高度.
+ *
+ * @param width 单个组件的高度.
+ * @param itemCount 组件数目.
+ * @param hasPadding 欲获取的高度是否用于有边框子窗口.
+ */
 float GetRealHeight(float height, int itemCount, bool hasPadding = false);
+
+/**
+ * @brief 使用给定分割符将字符串切割为若干子串.
+ *
+ * @param str 欲切割字符串.
+ * @param delim 分割符.
+ */
 std::vector<std::string> split(std::string str, char delim);
-
-namespace Game {
-// game.cpp
-void TutorialWindow(const char *game, bool *p_open);
-bool LevelSelectWindow(const char *game, bool *p_open, std::string *p_level);
-
-// save.cpp
-float getBestTime(const char *game, const char *id);
-void setBestTime(const char *game, const char *id, float time);
-bool getLevelSelectData(const char *game, std::string *tid, int *page);
-void setLevelSelectData(const char *game, std::string tid, int page);
-
-void SudokuWindow(bool *p_open);  // cpp
-void KakuroWindow(bool *p_open);  // kakuro.cpp
-}  // namespace Game
-
-struct NumberOperation {
-  int x, y, prev, curr;
-};
 
 template <class Operation>
 struct Puzzle {
   YAML::Node node;
-  std::string game;
-  std::string id;
-  std::string author;
+  std::string game, id, author;
   int difficulty;
 
   std::vector<Operation> history;
   int historyIndex;
 
-  float startTime;
-  float endTime;
-  float bestTime;
+  float startTime, endTime, bestTime;
 
   bool err;
   std::string errType;
 
-  bool showTutorial;
-  bool showLevelSelect;
+  bool showTutorial, showLevelSelect;
 
-  Puzzle(const char *game, const char *id)
-      : game{game},
-        id{id},
-        history{},
-        historyIndex{-1},
-        startTime{(float)ImGui::GetTime()},
-        endTime{0.0f},
-        err{false},
-        errType{""},
-        showTutorial{false},
-        showLevelSelect{false} {
-    node =
-        YAML::LoadFile(std::string("../levels/") + game + "/" + id + ".yaml");
-    author = node["author"].as<std::string>();
-    difficulty = node["difficulty"].as<int>();
-    bestTime = Game::getBestTime(game, id);
-  };
+  Puzzle(const char *game, const char *id);
 
-  void TutorialWindow() {
-    if (showTutorial) Game::TutorialWindow(game.c_str(), &showTutorial);
-  };
+  void TutorialWindow();
+  bool LevelSelectWindow(std::string *p_id);
+  void LevelDetails(const char *fmt, ...);
 
-  bool LevelSelectWindow(std::string *p_id) {
-    if (!showLevelSelect) return false;
-    return Game::LevelSelectWindow(game.c_str(), &showLevelSelect, p_id);
-  };
-
-  void LevelDetails(const char *fmt, ...) {
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
-      if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
-        if (ImGui::IsKeyReleased(ImGuiKey_O)) showLevelSelect = true;
-        if (ImGui::IsKeyReleased(ImGuiKey_Z) && canUndo()) undo();
-        if (ImGui::IsKeyReleased(ImGuiKey_Y) && canRedo()) redo();
-      }
-
-    if (endTime) {
-      if (errType == "best") {
-        ImGui::PushStyleButtonColored(1, 7);
-        ImGui::Button("Best!");
-      } else {
-        ImGui::PushStyleButtonColored(2, 7);
-        ImGui::Button("Clear!");
-      }
-      ImGui::PopStyleButtonColored();
-      ImGui::SameLine();
-      ImGui::TimeText(endTime - startTime);
-    } else {
-      if (ImGui::Button("Check")) check();
-      ImGui::SameLine();
-      ImGui::TimeText((float)ImGui::GetTime() - startTime);
-    }
-
-    if (bestTime) {
-      ImGui::SameLine();
-      ImGui::Text("/");
-      ImGui::SameLine();
-      ImGui::TimeText(bestTime);
-    }
-
-    if (err) {
-      ImGui::SameLine();
-      va_list args;
-      va_start(args, fmt);
-      ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 0.0f, 0.0f, 1.0f});
-      ImGui::TextV(fmt, args);
-      ImGui::PopStyleColor();
-      va_end(args);
-    }
-
-    if (ImGui::Difficulty(difficulty)) showLevelSelect = true;
-    ImGui::SameLine();
-    ImGui::Text("Author: %s", author.c_str());
-  }
-
+  void pushHistory(Operation op);
   bool canUndo() const { return historyIndex >= 0; };
   bool canRedo() const { return historyIndex < (int)history.size() - 1; }
+  void undo();
+  void redo();
+  void clear();
+  void win();
+
   virtual void undo_(Operation op) { return; };
   virtual void redo_(Operation op) { return; };
-  void undo() {
-    if (endTime) return;
-    if (!canUndo()) return;
-    undo_(history[historyIndex]);
-    historyIndex -= 1;
-  };
-  void redo() {
-    if (endTime) return;
-    if (!canRedo()) return;
-    historyIndex += 1;
-    redo_(history[historyIndex]);
-  };
-
-  void pushHistory(Operation op) {
-    historyIndex += 1;
-    if (historyIndex < (int)history.size())
-      history[historyIndex] = op;
-    else
-      history.push_back(op);
-  }
-
   virtual void clear_() { return; };
-  void clear() {
-    if (endTime) return;
-    history.clear();
-    historyIndex = -1;
-    clear_();
-  }
-
   virtual void check() { return; };
-  void win() {
-    errType = "";
-    err = false;
-    endTime = (float)ImGui::GetTime();
-    if (!bestTime || (endTime - startTime <= bestTime)) {
-      errType = "best";
-      Game::setBestTime(game.c_str(), id.c_str(),
-                        bestTime = endTime - startTime);
-    }
-  }
 };
+
+struct NumberOperation {
+  int x, y, prev, curr;
+};
+
+#include "internal.h"
 
 #endif

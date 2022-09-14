@@ -13,6 +13,8 @@
 git clone https://github.com/waterv/c-cpp.git
 ```
 
+生成工具为 Visual Studio 16 2019 (解决方案平台选择 `x86`).
+
 ### 自动格式化
 安装 `clang-format` 格式化工具:
 

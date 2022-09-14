@@ -153,6 +153,7 @@
     <ClInclude Include="..\deps\imgui\imstb_textedit.h" />
     <ClInclude Include="..\deps\imgui\imstb_truetype.h" />
     <ClInclude Include="game.h" />
+    <ClInclude Include="internal.h" />
     <ClInclude Include="main.h" />
   </ItemGroup>
   <ItemGroup>
@@ -164,11 +165,10 @@
     <ClCompile Include="..\deps\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\deps\imgui\imgui_widgets.cpp" />
     <ClCompile Include="game.cpp" />
+    <ClCompile Include="internal.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="misc.cpp" />
     <ClCompile Include="puzzles\kakuro.cpp" />
     <ClCompile Include="puzzles\sudoku.cpp" />
-    <ClCompile Include="save.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

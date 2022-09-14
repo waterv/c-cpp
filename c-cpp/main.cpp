@@ -88,8 +88,8 @@ int main() {
     ImGui::NewFrame();
 
     if (show_demo_window) ImGui::ShowDemoWindow(&show_demo_window);
-    if (show_sudoku_window) Game::SudokuWindow(&show_sudoku_window);
-    if (show_kakuro_window) Game::KakuroWindow(&show_kakuro_window);
+    if (show_sudoku_window) SudokuWindow(&show_sudoku_window);
+    if (show_kakuro_window) KakuroWindow(&show_kakuro_window);
 
     {
       static float f = 0.0f;

@@ -47,12 +47,12 @@
     <ClInclude Include="..\deps\imgui\imstb_truetype.h">
       <Filter>ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="internal.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="misc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\imgui\imgui.cpp">
@@ -76,17 +76,17 @@
     <ClCompile Include="..\deps\imgui\imgui_widgets.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="game.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="save.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="puzzles\sudoku.cpp">
       <Filter>源文件\Puzzles</Filter>
     </ClCompile>
     <ClCompile Include="puzzles\kakuro.cpp">
       <Filter>源文件\Puzzles</Filter>
+    </ClCompile>
+    <ClCompile Include="internal.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="game.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
