@@ -157,6 +157,7 @@
     <ClInclude Include="main.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\c-cpp\c-cpp\puzzles\akari.cpp" />
     <ClCompile Include="..\deps\imgui\imgui.cpp" />
     <ClCompile Include="..\deps\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\deps\imgui\imgui_draw.cpp" />
