@@ -69,6 +69,9 @@ void DrawBorder(ImDrawList *drawList, ImVec2 screenPos, int x, int y,
  * @param id 子窗口的 ID.
  * @param p_num 当前选中数字的指针.
  */
+
+void DrawCircleFilled(ImDrawList* drawList, ImVec2 pos, float radius, ImU32 col = BorderColor());
+
 void NumPadChild(const char *id, int *p_num);
 
 }  // namespace ImGui

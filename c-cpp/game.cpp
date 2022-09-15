@@ -53,6 +53,10 @@ void ImGui::DrawLine(ImDrawList* drawList, ImVec4 pos, ImU32 col,
   drawList->AddLine({pos.x, pos.y}, {pos.z, pos.w}, col, thickness);
 }
 
+void ImGui::DrawCircleFilled(ImDrawList* drawList, ImVec2 pos, float radius, ImU32 col) {
+    drawList->AddCircleFilled({ pos.x, pos.y }, radius,col, 0);
+}
+
 void ImGui::DrawRectFilled(ImDrawList* drawList, ImVec4 pos, ImU32 col) {
   drawList->AddRectFilled({pos.x, pos.y}, {pos.z, pos.w}, col);
 }
