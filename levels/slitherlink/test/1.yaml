@@ -1,0 +1,8 @@
+author: Sample
+difficulty: 0
+width: 3
+height: 3
+question:
+  - [0, 2, 0]
+  - [2, 5, 2]
+  - [0, 2, 0]

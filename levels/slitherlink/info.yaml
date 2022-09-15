@@ -1,0 +1,15 @@
+tutorials:
+  Rules:
+    - Connect adjacent dots with vertical or horizontal lines to make a single loop.
+    - "The numbers indicate how many lines surround it,\nwhile empty cells may be surrounded by any number of lines."
+    - The loop never crosses itself and never branches off.
+levels:
+  - tid: psp3
+    origin: ニコリの数独 +3 第三集
+    number: 1
+  - tid: psv12
+    origin: ニコリのパズルV
+    number: 1
+  - tid: test
+    origin: Test Cases
+    number: 1

@@ -27,10 +27,7 @@ void ImGui::PushStyleButtonColored(int idx, int max) {
 
 void ImGui::PopStyleButtonColored() { PopStyle(3); }
 
-ImU32 ImGui::BorderColor() {
-  ImU32 result = ImColor{ImGui::GetStyleColorVec4(ImGuiCol_Text)};
-  return result;
-}
+ImU32 ImGui::BorderColor() { return ImGui::GetColorU32(ImGuiCol_Text); }
 
 ImU32 ImGui::BackgroundColor(float alpha) {
   auto color = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
@@ -38,6 +35,8 @@ ImU32 ImGui::BackgroundColor(float alpha) {
   ImU32 result = ImColor{color};
   return result;
 }
+
+ImU32 ImGui::NoteColor() { return ImGui::GetColorU32(ImGuiCol_PlotHistogram); }
 
 ImVec4 ImGui::GetPos(ImVec2 screenPos, int x, int y) {
   auto pad = ImGui::GetStyle().ItemSpacing;

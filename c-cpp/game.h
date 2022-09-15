@@ -5,9 +5,11 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
+#define ABS(x) ((x) < 0 ? -(x) : (x))
 
 void SudokuWindow(bool *p_open);
 void KakuroWindow(bool *p_open);
+void SlitherlinkWindow(bool *p_open);
 
 // 棋盘格子的大小.
 const int CellSize = 25;
@@ -33,6 +35,7 @@ void PopStyleButtonColored();
 
 ImU32 BorderColor();
 ImU32 BackgroundColor(float alpha = 0.3f);
+ImU32 NoteColor();
 
 /**
  * @brief 取棋盘上某格的左上右下坐标.

@@ -88,5 +88,8 @@
     <ClCompile Include="game.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="puzzles\slitherlink.cpp">
+      <Filter>源文件\Puzzles</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

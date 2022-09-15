@@ -168,6 +168,7 @@
     <ClCompile Include="internal.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="puzzles\kakuro.cpp" />
+    <ClCompile Include="puzzles\slitherlink.cpp" />
     <ClCompile Include="puzzles\sudoku.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
